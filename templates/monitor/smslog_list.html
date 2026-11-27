@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}SMS Log - HydroHomie{% endblock %}
+{% block content %}
+<h1 class="h4 mb-3">SMS Log</h1>
+<div class="table-responsive">
+  <table class="table table-sm table-striped align-middle bg-white">
+    <thead>
+      <tr><th>Time</th><th>Dir</th><th>Phone</th><th>Message</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {% for log in logs %}
+      <tr>
+        <td class="text-nowrap">{{ log.created_at|date:"M d H:i" }}</td>
+        <td>{{ log.direction }}</td>
+        <td class="text-nowrap">{{ log.phone_number }}</td>
+        <td>{{ log.body|truncatechars:120 }}{% if log.error_message %}<div class="text-danger small">{{ log.error_message|truncatechars:120 }}</div>{% endif %}</td>
+        <td>{{ log.get_status_display }}</td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="text-center text-body-secondary">No messages yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "monitor/_pagination.html" %}
+{% endblock %}

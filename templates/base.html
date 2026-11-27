@@ -1,0 +1,54 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>{% block title %}HydroHomie{% endblock %}</title>
+  <link href="{% static 'vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+<body class="bg-body-tertiary">
+{% if user.is_authenticated %}
+{% with current=request.resolver_match.url_name %}
+<nav class="navbar navbar-expand-md navbar-dark bg-primary mb-3">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="{% url 'dashboard' %}">HydroHomie</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#mainNav" aria-controls="mainNav"
+            aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item"><a class="nav-link {% if current == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}">Monitoring</a></li>
+        <li class="nav-item"><a class="nav-link {% if current == 'thresholds' %}active{% endif %}" href="{% url 'thresholds' %}">Thresholds</a></li>
+        <li class="nav-item"><a class="nav-link {% if current == 'announcements' %}active{% endif %}" href="{% url 'announcements' %}">Announcements</a></li>
+        <li class="nav-item"><a class="nav-link {% if current == 'residents' %}active{% endif %}" href="{% url 'residents' %}">Residents</a></li>
+        <li class="nav-item"><a class="nav-link {% if current == 'sms-log' %}active{% endif %}" href="{% url 'sms-log' %}">SMS Log</a></li>
+        <li class="nav-item"><a class="nav-link {% if current == 'public-site' %}active{% endif %}" href="{% url 'public-site' %}">Public site</a></li>
+      </ul>
+      <form method="post" action="{% url 'logout' %}" class="d-flex align-items-center gap-2">
+        {% csrf_token %}
+        <span class="navbar-text small">{{ user.username }}</span>
+        <button type="submit" class="btn btn-outline-light btn-sm">Log out</button>
+      </form>
+    </div>
+  </div>
+</nav>
+{% endwith %}
+{% endif %}
+
+<main class="container-fluid pb-4">
+  {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'success' }} alert-dismissible fade show" role="alert">
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</main>
+
+<script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

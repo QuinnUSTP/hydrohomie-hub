@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Login - HydroHomie{% endblock %}
+{% block content %}
+<div class="mx-auto mt-5" style="max-width: 400px;">
+  <div class="card shadow-sm">
+    <div class="card-body p-4">
+      <h1 class="h4 mb-1">HydroHomie</h1>
+      <p class="text-body-secondary">Barangay officials only.</p>
+      {% if form.errors %}
+        <div class="alert alert-danger py-2">Wrong username or password.</div>
+      {% endif %}
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="id_username" class="form-label">Username</label>
+          <input type="text" name="username" id="id_username" class="form-control"
+                 autocomplete="username" autofocus required>
+        </div>
+        <div class="mb-3">
+          <label for="id_password" class="form-label">Password</label>
+          <input type="password" name="password" id="id_password" class="form-control"
+                 autocomplete="current-password" required>
+        </div>
+        <input type="hidden" name="next" value="{{ next }}">
+        <button type="submit" class="btn btn-primary w-100">Log in</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Public site - HydroHomie{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h4 mb-0">Public site</h1>
+  <form method="post" action="{% url 'public-site-send' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-sm"{% if problem %} disabled{% endif %}>Send now</button>
+  </form>
+</div>
+
+{% if problem %}
+<div class="alert alert-warning" role="alert">{{ problem }}</div>
+{% endif %}
+
+<div class="row g-3 mb-4">
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <h2 class="h6">Connection</h2>
+      <dl class="row mb-0 small">
+        <dt class="col-5">Public address</dt>
+        <dd class="col-7">{% if site_url %}{{ site_url }}{% else %}Not set{% endif %}</dd>
+        <dt class="col-5">Access token</dt>
+        <dd class="col-7">{% if token_set %}Configured{% else %}Missing{% endif %}</dd>
+        <dt class="col-5">Publisher</dt>
+        <dd class="col-7">
+          {% if publisher_running %}
+          <span class="badge text-bg-success">Running</span>
+          {% else %}
+          <span class="badge text-bg-secondary">Not running</span>
+          <div class="text-body-secondary">Start it with <code>python manage.py publish_public</code></div>
+          {% endif %}
+        </dd>
+      </dl>
+    </div></div>
+  </div>
+  <div class="col-md-6">
+    <div class="card shadow-sm h-100"><div class="card-body">
+      <h2 class="h6">Last send</h2>
+      <dl class="row mb-0 small">
+        <dt class="col-5">Last success</dt>
+        <dd class="col-7">
+          {% if status.last_success_at %}{{ status.last_success_at|timesince }} ago{% else %}Never{% endif %}
+          {% if health == "ok" %}<span class="badge text-bg-success">OK</span>
+          {% elif health == "stale" %}<span class="badge text-bg-warning">Delayed</span>
+          {% else %}<span class="badge text-bg-secondary">No data sent yet</span>{% endif %}
+        </dd>
+        <dt class="col-5">Last attempt</dt>
+        <dd class="col-7">{% if status.last_attempt_at %}{{ status.last_attempt_at|timesince }} ago{% else %}Never{% endif %}</dd>
+        <dt class="col-5">Failures in a row</dt>
+        <dd class="col-7">{{ status.failures_in_a_row }}</dd>
+        {% if status.last_error %}
+        <dt class="col-5">Last error</dt>
+        <dd class="col-7 text-danger">{{ status.last_error }}</dd>
+        {% endif %}
+      </dl>
+    </div></div>
+  </div>
+</div>
+
+<h2 class="h5">Zones on the public site</h2>
+<div class="table-responsive">
+  <table class="table table-sm table-striped align-middle bg-white">
+    <thead>
+      <tr><th>Zone</th><th>Public name</th><th>Shown publicly</th><th>Sensor height</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for n in nodes %}
+      <tr>
+        <td>{{ n.node_id }} <span class="text-body-secondary">{{ n.name }}</span></td>
+        <td>{% if n.public_name %}{{ n.public_name }}{% else %}<span class="text-body-secondary">uses the zone name</span>{% endif %}</td>
+        <td>{% if n.is_public %}<span class="badge text-bg-success">Yes</span>{% else %}<span class="badge text-bg-secondary">No</span>{% endif %}</td>
+        <td>{% if n.sensor_height_cm is not None %}{{ n.sensor_height_cm }} cm{% else %}Not set{% endif %}</td>
+        <td class="text-end"><a href="{% url 'public-site-zone' n.pk %}" class="btn btn-outline-primary btn-sm">Edit</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="5" class="text-center text-body-secondary">No active zones.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<p class="small text-body-secondary">
+  {{ public_notes }} announcement{{ public_notes|pluralize }} currently published.
+  Tick "Publish to public" on an announcement to add it.
+  Only zone names, states, water levels, alert times and published announcements are sent.
+  Residents, phone numbers and SMS logs never leave this computer.
+</p>
+{% endblock %}

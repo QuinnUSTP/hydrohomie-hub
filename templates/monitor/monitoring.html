@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Monitoring - HydroHomie{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-2 gap-1">
+  <h1 class="h4 mb-0">Monitoring</h1>
+  <small class="text-body-secondary" id="updated">Loading...</small>
+</div>
+
+<div id="connection-error" class="alert alert-warning d-none" role="alert">
+  Cannot reach the server. Showing the last known data. Retrying...
+</div>
+
+<div id="alert-banner" class="alert alert-danger d-none fw-bold" role="alert"></div>
+
+<div id="nodes" class="row g-3"
+     data-api-url="{% url 'api-status' %}"
+     data-login-url="{% url 'login' %}"></div>
+
+<p id="empty" class="text-body-secondary d-none">
+  No active sensor nodes. Add one in the admin.
+</p>
+{% endblock %}
+{% block scripts %}
+<script src="{% static 'js/monitoring.js' %}"></script>
+{% endblock %}

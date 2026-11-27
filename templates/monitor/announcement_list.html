@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Announcements - HydroHomie{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Announcements</h1>
+  <a href="{% url 'announcement-add' %}" class="btn btn-primary btn-sm">New announcement</a>
+</div>
+{% for a in announcements %}
+<div class="card shadow-sm mb-2{% if not a.is_active %} opacity-50{% endif %}">
+  <div class="card-body">
+    <div class="d-flex justify-content-between gap-2">
+      <h2 class="h6 mb-1">{{ a.title }}</h2>
+      {% if not a.is_active %}<span class="badge text-bg-secondary">Hidden</span>{% endif %}
+    </div>
+    <p class="mb-2" style="white-space: pre-line;">{{ a.body }}</p>
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
+      <small class="text-body-secondary">
+        {{ a.created_at|date:"M d, Y H:i" }}{% if a.created_by %} by {{ a.created_by.username }}{% endif %}
+      </small>
+      <span>
+        <a href="{% url 'announcement-edit' a.pk %}" class="btn btn-outline-primary btn-sm">Edit</a>
+        <a href="{% url 'announcement-delete' a.pk %}" class="btn btn-outline-danger btn-sm">Delete</a>
+      </span>
+    </div>
+  </div>
+</div>
+{% empty %}
+<p class="text-body-secondary">No announcements yet.</p>
+{% endfor %}
+{% include "monitor/_pagination.html" %}
+{% endblock %}

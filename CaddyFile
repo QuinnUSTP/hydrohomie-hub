@@ -1,0 +1,11 @@
+{
+    auto_https disable_redirects
+}
+
+https://192.168.100.9:8443, https://localhost:8443, https://127.0.0.1:8443 {
+    tls S:/hydrohomie-hub/certs/hydrohomie.pem S:/hydrohomie-hub/certs/hydrohomie-key.pem
+
+    header X-Robots-Tag "noindex, nofollow"
+
+    reverse_proxy 127.0.0.1:8000
+}
