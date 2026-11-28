@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Nodes - HydroHomie{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h4 mb-0">Sensor nodes</h1>
+  <a class="btn btn-primary btn-sm" href="{% url 'node-add' %}">Add node</a>
+</div>
+<p class="text-muted small">The node ID must match exactly what the sensor sends, for example node1. Readings from unknown or inactive nodes are skipped.</p>
+<div class="table-responsive">
+  <table class="table table-sm table-striped align-middle bg-white">
+    <thead>
+      <tr><th>Node ID</th><th>Name</th><th>Location</th><th>Status</th><th>Last reading</th><th>Alert threshold</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for n in nodes %}
+      <tr>
+        <td><code>{{ n.node_id }}</code></td>
+        <td>{{ n.name }}</td>
+        <td>{{ n.location|default:"-" }}</td>
+        <td>{% if n.is_active %}<span class="badge text-bg-success">Active</span>{% else %}<span class="badge text-bg-secondary">Inactive</span>{% endif %}</td>
+        <td>{% if n.last_seen %}{{ n.last_seen|timesince }} ago{% else %}never{% endif %}</td>
+        <td>{% if n.threshold %}{{ n.threshold.alert_distance_cm }} cm{% else %}<a href="{% url 'threshold-add' %}">Set threshold</a>{% endif %}</td>
+        <td class="text-end"><a class="btn btn-outline-primary btn-sm" href="{% url 'node-edit' n.pk %}">Edit</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="text-center text-muted py-4">No nodes yet. Add the first one.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

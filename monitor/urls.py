@@ -22,4 +22,8 @@ urlpatterns = [
     path("dashboard/public-site/", pages.PublicSiteView.as_view(), name="public-site"),
     path("dashboard/public-site/send/", pages.PublicSiteSendView.as_view(), name="public-site-send"),
     path("dashboard/public-site/zones/<int:pk>/", pages.NodePublicUpdateView.as_view(), name="public-site-zone"),
+    path("setup/", pages.SetupView.as_view(), name="setup"),
+    path("dashboard/nodes/", pages.NodeListView.as_view(), name="nodes"),
+    path("dashboard/nodes/add/", pages.NodeCreateView.as_view(), name="node-add"),
+    path("dashboard/nodes/<int:pk>/edit/", pages.NodeUpdateView.as_view(), name="node-edit"),
 ]

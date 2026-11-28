@@ -1,26 +1,27 @@
 """Starts and watches the three HydroHomie background services."""
-import os
 import subprocess
-import sys
 import threading
 import time
-from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-DATA_DIR = Path(os.getenv("HYDROHOMIE_DATA_DIR", BASE_DIR))
-LOG_DIR = DATA_DIR / "logs"
-NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+from dotenv import dotenv_values
+
+from desktop.paths import BASE_DIR, DATA_DIR, LOG_DIR, NO_WINDOW, child_env, python_exe
 
 SERVICES = {
-    "web": [sys.executable, str(BASE_DIR / "serve.py")],
-    "bridge": [sys.executable, str(BASE_DIR / "manage.py"), "serial_bridge"],
-    "publisher": [sys.executable, str(BASE_DIR / "manage.py"), "publish_public"],
+    "web": ["serve.py"],
+    "bridge": ["manage.py", "serial_bridge"],
+    "publisher": ["manage.py", "publish_public"],
 }
 
 
+def publisher_enabled():
+    value = dotenv_values(DATA_DIR / ".env").get("PUBLIC_PUBLISH_ENABLED") or ""
+    return value.strip().lower() == "true"
+
+
 class Service:
-    def __init__(self, name, cmd):
-        self.name, self.cmd = name, cmd
+    def __init__(self, name, args):
+        self.name, self.args = name, args
         self.proc, self.log = None, None
         self.wanted = False
         self.state = "stopped"
@@ -60,10 +61,9 @@ class Service:
     def _launch(self):
         LOG_DIR.mkdir(parents=True, exist_ok=True)
         self.log = open(LOG_DIR / f"{self.name}.log", "ab")
-        env = dict(os.environ, PYTHONUNBUFFERED="1", PYTHONIOENCODING="utf-8",
-                   HYDROHOMIE_DATA_DIR=str(DATA_DIR))
+        cmd = [str(python_exe()), str(BASE_DIR / self.args[0]), *self.args[1:]]
         self.proc = subprocess.Popen(
-            self.cmd, cwd=BASE_DIR, env=env, stdout=self.log,
+            cmd, cwd=BASE_DIR, env=child_env(), stdout=self.log,
             stderr=subprocess.STDOUT, creationflags=NO_WINDOW)
         self.started_at = time.monotonic()
         self.state = "running"
@@ -83,15 +83,27 @@ class Service:
 
 class Supervisor:
     def __init__(self):
-        self.services = {n: Service(n, c) for n, c in SERVICES.items()}
+        self.services = {n: Service(n, a) for n, a in SERVICES.items()}
         self._stop = threading.Event()
         self._thread = threading.Thread(target=self._run, daemon=True)
 
+    def _start_services(self):
+        for name, service in self.services.items():
+            if name == "publisher" and not publisher_enabled():
+                service.stop()
+                service.state = "disabled"
+            else:
+                service.start()
+
     def start_all(self):
-        for service in self.services.values():
-            service.start()
+        self._start_services()
         if not self._thread.is_alive():
             self._thread.start()
+
+    def restart_all(self):
+        for service in self.services.values():
+            service.stop()
+        self._start_services()
 
     def stop_all(self):
         self._stop.set()

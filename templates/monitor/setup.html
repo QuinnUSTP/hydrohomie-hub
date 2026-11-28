@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Set up HydroHomie{% endblock %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+  <div class="col-md-6 col-lg-4">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h1 class="h4 mb-3">Welcome to HydroHomie</h1>
+        <p class="text-muted">Create the administrator account for this computer. Keep the password safe: it protects resident phone numbers and alert settings.</p>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {{ form.non_field_errors }}
+          {% for field in form %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}<div class="text-danger small">{{ error }}</div>{% endfor %}
+            {% if field.help_text %}<div class="form-text">{{ field.help_text|safe }}</div>{% endif %}
+          </div>
+          {% endfor %}
+          <button class="btn btn-primary w-100" type="submit">Create account</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -47,6 +47,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "monitor.middleware.NoIndexMiddleware",
+    "monitor.setup_middleware.FirstRunSetupMiddleware",
 ]
 
 ROOT_URLCONF = "hydrohomie.urls"
@@ -132,3 +133,5 @@ PUBLIC_SITE_TOKEN = os.getenv("PUBLIC_SITE_TOKEN", "").strip()
 PUBLIC_PUBLISH_INTERVAL = int(os.getenv("PUBLIC_PUBLISH_INTERVAL", "30"))
 
 MESSAGE_TAGS = {message_constants.ERROR: "danger"}
+
+FIRST_RUN_SETUP = False

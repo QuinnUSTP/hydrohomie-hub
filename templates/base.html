@@ -26,6 +26,7 @@
         <li class="nav-item"><a class="nav-link {% if current == 'residents' %}active{% endif %}" href="{% url 'residents' %}">Residents</a></li>
         <li class="nav-item"><a class="nav-link {% if current == 'sms-log' %}active{% endif %}" href="{% url 'sms-log' %}">SMS Log</a></li>
         <li class="nav-item"><a class="nav-link {% if current == 'public-site' %}active{% endif %}" href="{% url 'public-site' %}">Public site</a></li>
+        <li class="nav-item"><a class="nav-link {% if current == 'nodes' or current == 'node-add' or current == 'node-edit' %}active{% endif %}" href="{% url 'nodes' %}">Nodes</a></li>
       </ul>
       <form method="post" action="{% url 'logout' %}" class="d-flex align-items-center gap-2">
         {% csrf_token %}

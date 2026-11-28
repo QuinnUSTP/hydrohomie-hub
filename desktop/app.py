@@ -10,7 +10,9 @@ import pystray
 import webview
 from PIL import Image, ImageDraw
 
-from desktop.supervisor import DATA_DIR, LOG_DIR, Supervisor
+from desktop import firstrun
+from desktop.paths import DATA_DIR, LOG_DIR
+from desktop.supervisor import Supervisor
 
 PORT = int(os.getenv("HYDROHOMIE_PORT", "8000"))
 URL = f"http://127.0.0.1:{PORT}/dashboard/"
@@ -46,7 +48,7 @@ def make_icon(dot):
 def overall(status):
     if status["web"] != "running":
         return RED
-    if any(value != "running" for value in status.values()):
+    if any(value not in ("running", "disabled") for value in status.values()):
         return AMBER
     return GREEN
 
@@ -68,6 +70,7 @@ class App:
     def __init__(self):
         self.supervisor = Supervisor()
         self.quitting = False
+        self._asking = False
         self.window = webview.create_window(
             TITLE, html=SPLASH, width=1280, height=800, min_size=(900, 600),
             hidden="--background" in sys.argv)
@@ -94,18 +97,25 @@ class App:
         self.window.restore()
 
     def restart(self, *_):
-        for service in self.supervisor.services.values():
-            service.stop()
-            service.start()
+        self.supervisor.restart_all()
 
     def open_logs(self, *_):
         LOG_DIR.mkdir(parents=True, exist_ok=True)
         os.startfile(LOG_DIR)
 
     def quit(self, *_):
-        answer = message(
-            "If you quit, HydroHomie stops reading the sensors and stops updating the "
-            "public website.\n\nQuit anyway?", 0x04 | 0x30 | 0x40000)
+        if self._asking:
+            return
+        self._asking = True
+        threading.Thread(target=self._confirm_and_quit, daemon=True).start()
+
+    def _confirm_and_quit(self):
+        try:
+            answer = message(
+                "If you quit, HydroHomie stops reading the sensors and stops updating the "
+                "public website.\n\nQuit anyway?", 0x04 | 0x30 | 0x10000 | 0x40000)
+        finally:
+            self._asking = False
         if answer != 6:
             return
         self.quitting = True
@@ -123,6 +133,10 @@ class App:
             time.sleep(2)
 
     def on_started(self):
+        if not firstrun.prepare():
+            message("HydroHomie could not initialize. Look for the logs folder and send the files to your support person.")
+            self.quit()
+            return
         self.supervisor.start_all()
         self.tray.run_detached()
         threading.Thread(target=self.watch, daemon=True).start()

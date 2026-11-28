@@ -1,5 +1,5 @@
 from django import forms
-
+from django.contrib.auth.forms import UserCreationForm
 from .models import AlertThreshold, Announcement, Resident, SensorNode
 
 
@@ -40,3 +40,13 @@ class NodePublicForm(BootstrapFormMixin, forms.ModelForm):
     class Meta:
         model = SensorNode
         fields = ["is_public", "public_name", "sensor_height_cm"]
+
+class NodeForm(BootstrapFormMixin, forms.ModelForm):
+    class Meta:
+        model = SensorNode
+        fields = ["node_id", "name", "location", "is_active"]
+
+
+class AdminSetupForm(BootstrapFormMixin, UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        fields = ("username",)

@@ -3,9 +3,9 @@ from django.contrib.messages.views import SuccessMessageMixin
 from django.db.models import Q
 from django.http import HttpResponse
 from django.urls import reverse_lazy
-
+from django.contrib.auth import get_user_model, login
 from datetime import timedelta
-
+from .forms import AdminSetupForm, AnnouncementForm, NodeForm, ResidentForm, ThresholdForm
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.messages.views import SuccessMessageMixin
@@ -20,6 +20,7 @@ from .publisher import config_problem, publish_once
 from django.views.generic import (
     CreateView,
     DeleteView,
+    FormView,
     ListView,
     TemplateView,
     UpdateView,
@@ -215,3 +216,48 @@ class NodePublicUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
     success_url = reverse_lazy("public-site")
     success_message = "Zone settings saved."
     extra_context = {"page_title": "Public settings for a zone", "back_url": reverse_lazy("public-site")}
+
+# ---------- Nodes ----------
+class NodeListView(LoginRequiredMixin, ListView):
+    model = SensorNode
+    template_name = "monitor/node_list.html"
+    context_object_name = "nodes"
+
+    def get_queryset(self):
+        return SensorNode.objects.select_related("threshold").order_by("node_id")
+
+
+class NodeCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    form_class = NodeForm
+    template_name = "monitor/form.html"
+    success_url = reverse_lazy("nodes")
+    success_message = "Node added."
+    extra_context = {"page_title": "Add node", "back_url": reverse_lazy("nodes")}
+
+
+class NodeUpdateView(LoginRequiredMixin, SuccessMessageMixin, UpdateView):
+    model = SensorNode
+    form_class = NodeForm
+    template_name = "monitor/form.html"
+    success_url = reverse_lazy("nodes")
+    success_message = "Node updated."
+    extra_context = {"page_title": "Edit node", "back_url": reverse_lazy("nodes")}
+
+
+# ---------- First-run setup ----------
+class SetupView(FormView):
+    template_name = "monitor/setup.html"
+    form_class = AdminSetupForm
+
+    def dispatch(self, request, *args, **kwargs):
+        if get_user_model().objects.exists():
+            return redirect("login")
+        return super().dispatch(request, *args, **kwargs)
+
+    def form_valid(self, form):
+        user = form.save(commit=False)
+        user.is_staff = user.is_superuser = True
+        user.save()
+        login(self.request, user)
+        messages.success(self.request, "Administrator account created.")
+        return redirect("dashboard")
