@@ -5,8 +5,9 @@ from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-load_dotenv(BASE_DIR / ".env")
-
+# The installed app keeps data outside the program folder. By default it stays next to the code.
+DATA_DIR = Path(os.getenv("HYDROHOMIE_DATA_DIR", BASE_DIR))
+load_dotenv(DATA_DIR / ".env")
 
 def env_list(name, default=""):
     raw = os.getenv(name, default)
